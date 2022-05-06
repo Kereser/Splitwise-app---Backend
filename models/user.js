@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema({
   passwordHash: String,
   friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   Saldo: Number,
-  accounts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Account' }],
+  expenses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Expense' }],
+  notifications: [],
 })
 
 userSchema.set('toJSON', {
