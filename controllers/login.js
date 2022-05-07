@@ -16,7 +16,7 @@ LoginRouter.post('/', async (req, res) => {
   }
 
   // Agregar aqui la logica para jsonwebtoken
-  res.status(200).send({ username })
+  res.status(200).send(userInDb.toJSON())
 })
 
 module.exports = LoginRouter

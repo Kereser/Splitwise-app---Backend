@@ -24,13 +24,14 @@ const getUsers = (rUsers) => {
   return usersOneline.filter((u) => rUsers.includes(u.username))
 }
 
-const getUsersOffline = async (recieverUsers, senderUser) => {
+const getUsersOffline = async (recieverUsers, senderUser, senderUserId) => {
   const usersDb = await User.find({ username: { $in: recieverUsers } })
   console.log('Entro a offline')
   console.log('userInDB: ', usersDb)
 
+  console.log('not to offlineuser: ID SENDER USER:::', senderUserId)
   usersDb.map(async (u) => {
-    u.notifications = u.notifications.concat({ senderUser })
+    u.notifications = u.notifications.concat({ senderUser, senderUserId })
     console.log('Cada user por separado: ', u)
     await u.save()
   })
@@ -59,11 +60,11 @@ io.on('connection', (socket) => {
       console.log('onlineUsers: ', usersOneline)
       if (reciever) {
         // todo: Map para enviar las distintas notificaciones con los distintos usuarios.
-        userDb.notifications.map((n) => {
-          //! Revisar pq primero parece q tiene socked id y luego ya no!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          console.log('socket id: ', reciever.socketId, 'notification: ', n)
-          io.to(reciever.socketId).emit('getExpense', n)
-        })
+        console.log('notifications: ', userDb.notifications)
+        let notsToSend = userDb.notifications
+        io.to(reciever[0].socketId).emit('getExpense', notsToSend)
+        userDb.notifications = []
+        await userDb.save()
       }
     }
   })
@@ -79,11 +80,11 @@ io.on('connection', (socket) => {
 
       recievers.map((r) => {
         console.log('socket de cada uno de los reciever: ', r.socketId)
-        io.to(r.socketId).emit('getExpense', objToSend)
+        io.to(r.socketId).emit('getExpense', [objToSend])
       })
     } else {
       // Si no hay usuario online, lo busco en la base de datos y agrego la notificacion alli.
-      getUsersOffline(recieverUsers, senderUser)
+      getUsersOffline(recieverUsers, senderUser, senderUserId)
     }
   })
 
