@@ -20,16 +20,20 @@ const removeUser = (sockedId) => {
   usersOneline = usersOneline.filter((u) => u.socketId !== sockedId)
 }
 
-const getUser = (username) => {
-  return usersOneline.find((u) => u.username === username)
+const getUsers = (rUsers) => {
+  return usersOneline.filter((u) => rUsers.includes(u.username))
 }
 
-const getUserOffline = async (username, senderUser) => {
-  const userDb = await User.findOne({ username })
-  // todo: Revisar pq no esta agregndo la notificacion.
-  console.log(senderUser)
-  userDb.notifications = userDb.notifications.concat({ senderUser })
-  await userDb.save()
+const getUsersOffline = async (recieverUsers, senderUser) => {
+  const usersDb = await User.find({ username: { $in: recieverUsers } })
+  console.log('Entro a offline')
+  console.log('userInDB: ', usersDb)
+
+  usersDb.map(async (u) => {
+    u.notifications = u.notifications.concat({ senderUser })
+    console.log('Cada user por separado: ', u)
+    await u.save()
+  })
 }
 
 const io = new Server(httpServer, {
@@ -45,46 +49,43 @@ io.on('connection', (socket) => {
 
   socket.on('newUser', async (username) => {
     addNewUser(username, socket.id)
+    console.log('Logeo a un nuevo usuario', usersOneline)
     const userDb = await User.findOne({ username })
     if (userDb?.notifications.length > 0) {
       // Creo q no tengo realmente recieverUser
       const recieverUser = userDb.username
-      const reciever = getUser(recieverUser)
+      const reciever = getUsers(recieverUser)
+      console.log('Reciever: ', reciever)
+      console.log('onlineUsers: ', usersOneline)
       if (reciever) {
         // todo: Map para enviar las distintas notificaciones con los distintos usuarios.
         userDb.notifications.map((n) => {
-          console.log('socket id: ', socket.id)
+          //! Revisar pq primero parece q tiene socked id y luego ya no!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          console.log('socket id: ', reciever.socketId, 'notification: ', n)
           io.to(reciever.socketId).emit('getExpense', n)
         })
       }
     }
   })
 
-  socket.on(
-    'newExpense',
-    ({ receiverUser, senderUser, senderUserId, description, amount }) => {
-      const reciever = getUser(receiverUser)
-      const objToSend = { senderUser, description, senderUserId, amount }
+  socket.on('newExpense', ({ recieverUsers, senderUser, senderUserId }) => {
+    console.log('Entro en new expense')
+    const recievers = getUsers(recieverUsers)
+    console.log('recievers: ', recievers)
+    const objToSend = { senderUser, senderUserId }
 
-      if (reciever) {
-        console.log(
-          'reciever: ',
-          reciever,
-          'senderUser: ',
-          senderUser,
-          'receiverUser: ',
-          receiverUser,
-          'Reciever socket: ',
-          reciever.socketId,
-        )
+    if (recievers.length > 0) {
+      console.log('ENTRO A USER ONLINE')
 
-        io.to(reciever.socketId).emit('getExpense', objToSend)
-      } else {
-        // Si no hay usuario online, lo busco en la base de datos y agrego la notificacion alli.
-        getUserOffline(receiverUser, senderUser)
-      }
-    },
-  )
+      recievers.map((r) => {
+        console.log('socket de cada uno de los reciever: ', r.socketId)
+        io.to(r.socketId).emit('getExpense', objToSend)
+      })
+    } else {
+      // Si no hay usuario online, lo busco en la base de datos y agrego la notificacion alli.
+      getUsersOffline(recieverUsers, senderUser)
+    }
+  })
 
   socket.on('disconnect', () => {
     removeUser(socket.id)
