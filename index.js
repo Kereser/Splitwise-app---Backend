@@ -72,7 +72,7 @@ io.on('connection', (socket) => {
   socket.on('newExpense', ({ recieverUsers, senderUser, senderUserId }) => {
     const onlineRecievers = getUsers(recieverUsers)
     console.log('onlineRecievers: ', onlineRecievers)
-    console.log('*** onlineRecievers users: ***', recieverUsers)
+    console.log('*** Users to send the newExpense: ***', recieverUsers)
     const objToSend = { senderUser, senderUserId }
 
     if (onlineRecievers.length > 0) {
