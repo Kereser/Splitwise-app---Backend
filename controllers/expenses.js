@@ -22,7 +22,13 @@ ExpenseRouter.post('/', async (req, res) => {
     username: { $in: users },
   })
 
-  console.log('totalUsers: ', users)
+  usersInExpense.forEach(async (user) => {
+    const expenses = user.expenses
+    expenses.push(expenseDb)
+    await user.updateOne({ expenses: expenses })
+  })
+
+  console.log('Users with the expenses added: ', usersInExpense)
   res.status(201).send(expenseDb.toJSON())
 })
 

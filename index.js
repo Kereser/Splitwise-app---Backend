@@ -35,6 +35,7 @@ const getUsersOffline = async (recieverUsers, senderUser, senderUserId) => {
     console.log('Cada user por separado: ', u)
     await u.save()
   })
+  console.log('usersOffline: ', usersDb)
 }
 
 const io = new Server(httpServer, {
@@ -56,11 +57,10 @@ io.on('connection', (socket) => {
       // Creo q no tengo realmente recieverUser
       const recieverUser = userDb.username
       const reciever = getUsers(recieverUser)
-      console.log('Reciever: ', reciever)
-      console.log('onlineUsers: ', usersOneline)
+      console.log('User to send notifications bc was offline: ', reciever)
       if (reciever) {
         // todo: Map para enviar las distintas notificaciones con los distintos usuarios.
-        console.log('notifications: ', userDb.notifications)
+        console.log('Notifications on offline users: ', userDb.notifications)
         let notsToSend = userDb.notifications
         io.to(reciever[0].socketId).emit('getExpense', notsToSend)
         userDb.notifications = []
@@ -70,16 +70,29 @@ io.on('connection', (socket) => {
   })
 
   socket.on('newExpense', ({ recieverUsers, senderUser, senderUserId }) => {
-    console.log('Entro en new expense')
-    const recievers = getUsers(recieverUsers)
-    console.log('recievers: ', recievers)
+    const onlineRecievers = getUsers(recieverUsers)
+    console.log('onlineRecievers: ', onlineRecievers)
+    console.log('*** onlineRecievers users: ***', recieverUsers)
     const objToSend = { senderUser, senderUserId }
 
-    if (recievers.length > 0) {
+    if (onlineRecievers.length > 0) {
       console.log('ENTRO A USER ONLINE')
 
-      recievers.map((r) => {
-        console.log('socket de cada uno de los reciever: ', r.socketId)
+      if (onlineRecievers.length !== recieverUsers.length) {
+        onlineUsername = onlineRecievers.map((r) => {
+          return r.username
+        })
+
+        const usersOffline = recieverUsers.filter((totalU) => {
+          return !onlineUsername.includes(totalU)
+        })
+
+        console.log('Entro a users offline: ', usersOffline)
+        getUsersOffline(usersOffline, senderUser, senderUserId)
+      }
+
+      onlineRecievers.map((r) => {
+        console.log('Envio not a:  ', r.username)
         io.to(r.socketId).emit('getExpense', [objToSend])
       })
     } else {

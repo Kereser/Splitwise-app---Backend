@@ -24,4 +24,10 @@ UserRouter.post('/', async (req, res) => {
   res.status(201).json(savedUser.toJSON())
 })
 
+UserRouter.get('/:id', async (req, res) => {
+  const user = await User.findById(req.params.id).populate('expenses')
+
+  res.status(200).json(user.toJSON())
+})
+
 module.exports = UserRouter
