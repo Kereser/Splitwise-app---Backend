@@ -41,15 +41,17 @@ ExpenseRouter.get('/', async (req, res) => {
 
 ExpenseRouter.put('/:id', async (req, res) => {
   const { id } = req.params
-  const { description, balance, paidBy, debtors } = req.body
+  const { debtors } = req.body
 
-  const expense = await Expense.findByIdAndUpdate(id, {
-    description,
-    balance,
-    paidBy,
-    debtors,
-  })
+  const expense = await Expense.findByIdAndUpdate(
+    id,
+    {
+      debtors,
+    },
+    { new: true },
+  )
 
+  console.log(expense)
   res.status(200).send(expense.toJSON())
 })
 
