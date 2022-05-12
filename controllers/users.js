@@ -25,7 +25,9 @@ UserRouter.post('/', async (req, res) => {
 })
 
 UserRouter.get('/:id', async (req, res) => {
-  const user = await User.findById(req.params.id).populate('expenses')
+  const user = await User.findById(req.params.id)
+    .populate('expenses')
+    .populate('friends')
 
   res.status(200).json(user.toJSON())
 })

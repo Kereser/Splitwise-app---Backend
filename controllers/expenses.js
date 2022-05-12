@@ -22,10 +22,19 @@ ExpenseRouter.post('/', async (req, res) => {
     username: { $in: users },
   })
 
-  usersInExpense.forEach(async (user) => {
+  //Agregar expenses.
+  usersInExpense.forEach(async (user, _index, arr) => {
     const expenses = user.expenses
     expenses.push(expenseDb)
-    await user.updateOne({ expenses: expenses })
+    const friends = user.friends
+    for (let i = 0; i < arr.length; i++) {
+      if (user.username !== arr[i].username) {
+        if (!friends.includes(arr[i]._id)) {
+          friends.push(arr[i])
+        }
+      }
+    }
+    await user.updateOne({ expenses: expenses, friends: friends })
   })
 
   console.log('Users with the expenses added: ', usersInExpense)
