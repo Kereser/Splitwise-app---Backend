@@ -24,14 +24,23 @@ const getUsers = (rUsers) => {
   return usersOneline.filter((u) => rUsers.includes(u.username))
 }
 
-const getUsersOffline = async (recieverUsers, senderUser, senderUserId) => {
+const getUsersOffline = async (
+  recieverUsers,
+  senderUser,
+  senderUserId,
+  expense,
+) => {
   const usersDb = await User.find({ username: { $in: recieverUsers } })
   console.log('Entro a offline')
   console.log('userInDB: ', usersDb)
 
   console.log('not to offlineuser: ID SENDER USER:::', senderUserId)
   usersDb.map(async (u) => {
-    u.notifications = u.notifications.concat({ senderUser, senderUserId })
+    u.notifications = u.notifications.concat({
+      senderUser,
+      senderUserId,
+      expense,
+    })
     console.log('Cada user por separado: ', u)
     await u.save()
   })
@@ -62,44 +71,49 @@ io.on('connection', (socket) => {
         // todo: Map para enviar las distintas notificaciones con los distintos usuarios.
         console.log('Notifications on offline users: ', userDb.notifications)
         let notsToSend = userDb.notifications
-        io.to(reciever[0].socketId).emit('getExpense', notsToSend)
-        userDb.notifications = []
-        await userDb.save()
+        io.to(reciever[0].socketId).emit('getNotification', notsToSend)
       }
     }
   })
 
-  socket.on('newExpense', ({ recieverUsers, senderUser, senderUserId }) => {
-    const onlineRecievers = getUsers(recieverUsers)
-    console.log('onlineRecievers: ', onlineRecievers)
-    console.log('*** Users to send the newExpense: ***', recieverUsers)
-    const objToSend = { senderUser, senderUserId }
+  socket.on(
+    'newNotification',
+    ({ recieverUsers, senderUser, senderUserId, expense }) => {
+      const onlineRecievers = getUsers(recieverUsers)
+      console.log('onlineRecievers: ', onlineRecievers)
+      console.log('*** Users to send the newExpense: ***', recieverUsers)
+      const objToSend = { senderUser, senderUserId, expense }
 
-    if (onlineRecievers.length > 0) {
-      console.log('ENTRO A USER ONLINE')
+      if (onlineRecievers.length > 0) {
+        console.log('ENTRO A USER ONLINE')
 
-      if (onlineRecievers.length !== recieverUsers.length) {
-        onlineUsername = onlineRecievers.map((r) => {
-          return r.username
+        if (onlineRecievers.length !== recieverUsers.length) {
+          onlineUsername = onlineRecievers.map((r) => {
+            return r.username
+          })
+
+          const usersOffline = recieverUsers.filter((totalU) => {
+            return !onlineUsername.includes(totalU)
+          })
+
+          console.log('Entro a users offline: ', usersOffline)
+          getUsersOffline(usersOffline, senderUser, senderUserId, expense)
+        }
+
+        onlineRecievers.map(async (r) => {
+          console.log('Envio not a:  ', r)
+          const userDb = await User.findOne({ username: r.username })
+          console.log('User in DB: ', userDb)
+          userDb.notifications = userDb.notifications.concat(objToSend)
+          await userDb.save()
+          io.to(r.socketId).emit('getNotification', [objToSend])
         })
-
-        const usersOffline = recieverUsers.filter((totalU) => {
-          return !onlineUsername.includes(totalU)
-        })
-
-        console.log('Entro a users offline: ', usersOffline)
-        getUsersOffline(usersOffline, senderUser, senderUserId)
+      } else {
+        // Si no hay usuario online, lo busco en la base de datos y agrego la notificacion alli.
+        getUsersOffline(recieverUsers, senderUser, senderUserId, expense)
       }
-
-      onlineRecievers.map((r) => {
-        console.log('Envio not a:  ', r.username)
-        io.to(r.socketId).emit('getExpense', [objToSend])
-      })
-    } else {
-      // Si no hay usuario online, lo busco en la base de datos y agrego la notificacion alli.
-      getUsersOffline(recieverUsers, senderUser, senderUserId)
-    }
-  })
+    },
+  )
 
   socket.on('disconnect', () => {
     removeUser(socket.id)
