@@ -123,4 +123,4 @@ io.on('connection', (socket) => {
   })
 })
 
-httpServer.listen(3001)
+httpServer.listen(config.PORT)
