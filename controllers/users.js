@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt')
 const UserRouter = require('express').Router()
 const User = require('../models/user')
+const mongoose = require('mongoose')
 
 UserRouter.post('/', async (req, res) => {
   const { username, password, name } = req.body
@@ -34,16 +35,17 @@ UserRouter.get('/:id', async (req, res) => {
 })
 
 UserRouter.put('/:id', async (req, res) => {
-  const { id } = req.params
-  const { notifications } = req.body
+  const body = req.body
 
-  const user = await User.findByIdAndUpdate(
-    id,
-    {
-      notifications,
-    },
-    { new: true },
-  )
+  const newUser = {
+    friends: body.friends.map((f) => mongoose.Types.ObjectId(f)),
+    expenses: body.expenses.map((e) => mongoose.Types.ObjectId(e)),
+    notifications: body.notifications,
+  }
+
+  const user = await User.findByIdAndUpdate(req.params.id, newUser, {
+    new: true,
+  })
     .populate('expenses')
     .populate('friends')
 
