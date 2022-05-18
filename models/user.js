@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   Saldo: Number,
   expenses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Expense' }],
   notifications: [],
+  preferences: [],
 })
 
 userSchema.set('toJSON', {
