@@ -24,12 +24,13 @@ mongoose
     logger.error('error connecting to MongoDB:', error.message)
   })
 
+app.use(express.static('build'))
 app.use(cors())
 app.use(express.json())
 app.use(middleware.requestLogger)
-app.use('/users', UserRouter)
-app.use('/login', LoginRouter)
-app.use('/expenses', ExpenseRouter)
+app.use('/api/users', UserRouter)
+app.use('/api/login', LoginRouter)
+app.use('/api/expenses', ExpenseRouter)
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
