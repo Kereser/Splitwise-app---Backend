@@ -29,7 +29,7 @@ app.use(express.json())
 app.use(middleware.requestLogger)
 app.use('/users', UserRouter)
 app.use('/login', LoginRouter)
-app.use('/expense', ExpenseRouter)
+app.use('/expenses', ExpenseRouter)
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)

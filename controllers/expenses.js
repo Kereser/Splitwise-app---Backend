@@ -22,7 +22,7 @@ ExpenseRouter.post('/', async (req, res) => {
     username: { $in: users },
   })
 
-  //Agregar expenses.
+  //Agregar expenses y amigos
   usersInExpense.forEach(async (user, _index, arr) => {
     const expenses = user.expenses
     expenses.push(expenseDb)

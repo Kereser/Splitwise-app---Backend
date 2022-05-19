@@ -1,7 +1,5 @@
 const app = require('./app') // la aplicación Express real
 const { createServer } = require('http')
-const config = require('./utils/config')
-const logger = require('./utils/logger')
 const { Server } = require('socket.io')
 
 // users
@@ -122,5 +120,5 @@ io.on('connection', (socket) => {
     removeUser(socket.id)
   })
 })
-
-httpServer.listen(config.PORT)
+const PORT = process.env.PORT || 3001
+httpServer.listen(PORT)
