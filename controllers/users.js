@@ -43,7 +43,6 @@ UserRouter.put('/:id', async (req, res) => {
     notifications: body.notifications,
     preferences: body.preferences,
   }
-  //! Poner aqui las preferences para q se actualice.
 
   const user = await User.findByIdAndUpdate(req.params.id, newUser, {
     new: true,

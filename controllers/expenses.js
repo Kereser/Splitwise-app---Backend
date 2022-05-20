@@ -37,7 +37,6 @@ ExpenseRouter.post('/', async (req, res) => {
     await user.updateOne({ expenses: expenses, friends: friends })
   })
 
-  console.log('Users with the expenses added: ', usersInExpense)
   res.status(201).send(expenseDb.toJSON())
 })
 
@@ -61,7 +60,6 @@ ExpenseRouter.put('/:id', async (req, res) => {
 
   const expense = await Expense.findByIdAndUpdate(id, newExpense, { new: true })
 
-  console.log(expense)
   res.status(200).send(expense.toJSON())
 })
 
