@@ -2,6 +2,9 @@ const ExpenseRouter = require('express').Router()
 const Expense = require('../models/expense')
 const User = require('../models/user')
 
+//validator
+const validator = require('../utils/validations/expense_validations')
+
 ExpenseRouter.post('/', async (req, res) => {
   const { description, balance, paidBy, debtors } = req.body
 
@@ -22,7 +25,7 @@ ExpenseRouter.post('/', async (req, res) => {
     username: { $in: users },
   })
 
-  //Agregar expenses y amigos
+  //! Sacar a un modulo aparte esta logica.
   usersInExpense.forEach(async (user, _index, arr) => {
     const expenses = user.expenses
     expenses.push(expenseDb)
@@ -49,18 +52,25 @@ ExpenseRouter.get('/', async (req, res) => {
 
 ExpenseRouter.put('/:id', async (req, res) => {
   const { id } = req.params
-  const body = req.body
+  const { user, expense = null, type, notification = null } = req.body
 
-  const newExpense = {
-    description: body.description,
-    balance: body.balance,
-    paidBy: body.paidBy,
-    debtors: body.debtors,
+  const validId = await Expense.findById(req.params.id)
+  if (!validId) {
+    return res.status(404).send({ message: 'Expense not found.' })
   }
 
-  const expense = await Expense.findByIdAndUpdate(id, newExpense, { new: true })
+  let updatExp = {}
+  if (type === 'Transfer') {
+    updatExp = await validator.handleTransfer(user, notification)
+  } else if (type === 'TotalPay') {
+    updatExp = await validator.handleTotalPay(user, expense)
+  }
 
-  res.status(200).send(expense.toJSON())
+  const expenseUpdated = await Expense.findByIdAndUpdate(id, updatExp, {
+    new: true,
+  })
+
+  res.status(200).send(expenseUpdated.toJSON())
 })
 
 module.exports = ExpenseRouter

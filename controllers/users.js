@@ -3,29 +3,46 @@ const UserRouter = require('express').Router()
 const User = require('../models/user')
 const mongoose = require('mongoose')
 
+//validators
+const validator = require('../utils/validations/user_validations')
+
 UserRouter.post('/', async (req, res) => {
   const { username, password, name } = req.body
 
-  console.log(username, password, name)
-  const userExist = await User.findOne({ username })
-  if (userExist) {
-    return res.status(400).send({ message: 'Username already register.' })
-  }
-
-  const saltRounds = 10
-  const passwordHash = await bcrypt.hash(password, saltRounds)
-
-  const user = new User({
+  const { message = null, status } = validator.lengthValidator(
     username,
-    passwordHash,
+    password,
     name,
-  })
+  )
 
-  const savedUser = await user.save()
-  res.status(201).json(savedUser.toJSON())
+  if (status) {
+    const userExist = await User.findOne({ username })
+    if (userExist) {
+      return res.status(400).send({ message: 'Username already register.' })
+    }
+
+    const saltRounds = 10
+    const passwordHash = await bcrypt.hash(password, saltRounds)
+
+    const user = new User({
+      username,
+      passwordHash,
+      name,
+    })
+
+    const savedUser = await user.save()
+    res.status(201).json(savedUser.toJSON())
+  } else {
+    res.status(400).send({ message })
+  }
 })
 
 UserRouter.get('/:id', async (req, res) => {
+  const validId = await User.findById(req.params.id)
+  if (!validId) {
+    return res.status(404).send({ message: 'Non valid ID' })
+  }
+
   const user = await User.findById(req.params.id)
     .populate('expenses')
     .populate('friends')
@@ -35,24 +52,28 @@ UserRouter.get('/:id', async (req, res) => {
 })
 
 UserRouter.put('/:id', async (req, res) => {
-  const body = req.body
+  const { user, action } = req.body
 
-  const newUser = {
-    friends: body.friends.map((f) => mongoose.Types.ObjectId(f)),
-    expenses: body.expenses.map((e) => mongoose.Types.ObjectId(e)),
-    notifications: body.notifications,
-    preferences: body.preferences,
+  const validId = await User.findById(req.params.id)
+  if (!validId) {
+    return res.status(404).send({ message: 'User not found.' })
   }
 
-  const user = await User.findByIdAndUpdate(req.params.id, newUser, {
+  let updatedUser = {}
+  if (action.type === 'AcceptAll') {
+    updatedUser = validator.acceptNotifications(user)
+  } else if (action.type === 'AcceptOne') {
+    updatedUser = validator.acceptOneNotification(user, action.index)
+  }
+
+  const userUpdated = await User.findByIdAndUpdate(req.params.id, updatedUser, {
     new: true,
   })
     .populate('expenses')
     .populate('friends')
 
+  res.status(200).json(userUpdated.toJSON())
   //! RECORDAR CUANDO ENVIE EL USUSARIO DE NEUVO, Q MI USUARIO USA EXPENSES Y FRIEND Y SI NO HAGO POPULATE SOLO SE ENVIA EL ID.
-  console.log('User updated: ', user)
-  res.status(200).json(user.toJSON())
 })
 
 UserRouter.get('/', async (req, res) => {
