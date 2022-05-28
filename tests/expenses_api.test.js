@@ -16,16 +16,18 @@ beforeEach(async () => {
 
 describe('Adition of expenses', () => {
   test('New expense added correctly', async () => {
-    const expense = {
-      paidBy: [{ username: 'test3', amount: 10 }],
-      debtors: [{ username: 'test', amount: 10 }],
+    const newExpenseData = {
+      paidBy: 'test3',
+      debtor: 'test',
       description: 'Testing from t3 to t',
       balance: 20,
+      percentage: 50,
+      user: { username: 'test3' },
     }
 
     await api
       .post('/api/expenses')
-      .send(expense)
+      .send(newExpenseData)
       .expect(201)
       .expect('Content-Type', /application\/json/)
 
@@ -35,6 +37,14 @@ describe('Adition of expenses', () => {
     const lastAdded = expensesInDb.pop()
     expect(lastAdded.description).toContain('Testing from t3 to t')
     expect(lastAdded.balance).toBe(20)
+    expect(lastAdded.paidBy[0].username).toBe('test3')
+
+    const users = await helper.usersInDb()
+    expect(users).toHaveLength(helper.initialUsers.length)
+    const test3User = users.find((u) => u.username === 'test3')
+    const testUser = users.find((u) => u.username === 'test')
+    const arrIdFriends = testUser.friends.map((f) => f.toString())
+    expect(arrIdFriends).toContain(test3User.id)
   })
 
   test('Non valid expense id', async () => {
@@ -51,8 +61,8 @@ describe('Adition of expenses', () => {
 
 describe('get Expenses', () => {
   test('get all expenses', async () => {
-    const expenses = await helper.expensesInDb()
-    expect(expenses).toHaveLength(helper.initialExpenses.length)
+    const expenses = await api.get('/api/expenses').expect(200)
+    expect(expenses.body).toHaveLength(helper.initialExpenses.length)
   })
 
   test('get updatedUser', async () => {

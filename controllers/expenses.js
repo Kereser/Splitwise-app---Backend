@@ -6,41 +6,53 @@ const User = require('../models/user')
 const validator = require('../utils/validations/expense_validations')
 
 ExpenseRouter.post('/', async (req, res) => {
-  const { description, balance, paidBy, debtors } = req.body
+  const { debtor, description, balance, paidBy, percentage, user } = req.body
 
-  const expense = new Expense({
-    description,
-    balance,
+  const validation = validator.inputValidations(
     paidBy,
-    debtors,
-    date: new Date(),
-  })
+    debtor,
+    user,
+    balance,
+    description,
+  )
 
-  const expenseDb = await expense.save()
+  if (!validation.status) {
+    console.log('Fallo en validar campos', validation.message)
+    res.status(404).send({ message: validation.message })
+  } else {
+    const response = await validator.finalExpense(
+      paidBy,
+      debtor,
+      balance,
+      description,
+      percentage,
+    )
+    if (!response.status) {
+      console.log('Fallo en validar expenseFinal', response.message)
+      res.status(404).send({ message: response.message })
+    } else {
+      const expense = new Expense({
+        description: response.description,
+        balance: response.balance,
+        paidBy: response.paidBy,
+        debtors: response.debtors,
+        date: new Date(),
+      })
 
-  let users = debtors.map((u) => u.username)
-  users = users.concat([...paidBy.map((u) => u.username)])
+      const expenseDb = await expense.save()
 
-  const usersInExpense = await User.find({
-    username: { $in: users },
-  })
+      let users = expenseDb.debtors.map((u) => u.username)
+      users = users.concat([...expenseDb.paidBy.map((u) => u.username)])
 
-  //! Sacar a un modulo aparte esta logica.
-  usersInExpense.forEach(async (user, _index, arr) => {
-    const expenses = user.expenses
-    expenses.push(expenseDb)
-    const friends = user.friends
-    for (let i = 0; i < arr.length; i++) {
-      if (user.username !== arr[i].username) {
-        if (!friends.includes(arr[i]._id)) {
-          friends.push(arr[i])
-        }
-      }
+      const usersInExpense = await User.find({
+        username: { $in: users },
+      })
+
+      await validator.addFriendsAndExpenses(usersInExpense, expenseDb)
+
+      res.status(201).send(expenseDb.toJSON())
     }
-    await user.updateOne({ expenses: expenses, friends: friends })
-  })
-
-  res.status(201).send(expenseDb.toJSON())
+  }
 })
 
 ExpenseRouter.get('/', async (req, res) => {
@@ -52,7 +64,13 @@ ExpenseRouter.get('/', async (req, res) => {
 
 ExpenseRouter.put('/:id', async (req, res) => {
   const { id } = req.params
-  const { user, expense = null, type, notification = null } = req.body
+  const {
+    user,
+    type,
+    expense = null,
+    notification = null,
+    payment = null,
+  } = req.body
 
   const validId = await Expense.findById(req.params.id)
   if (!validId) {
@@ -64,6 +82,8 @@ ExpenseRouter.put('/:id', async (req, res) => {
     updatExp = await validator.handleTransfer(user, notification)
   } else if (type === 'TotalPay') {
     updatExp = await validator.handleTotalPay(user, expense)
+  } else {
+    updatExp = await validator.handlePartialPay(user, expense, payment)
   }
 
   const expenseUpdated = await Expense.findByIdAndUpdate(id, updatExp, {
