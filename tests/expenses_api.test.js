@@ -51,9 +51,8 @@ describe('Adition of expenses', () => {
     const nonValidId = await helper.nonExistingExpenseId()
 
     await api.put(`/api/expenses/${nonValidId}`).expect(404)
-    expect(await helper.expensesInDb()).toHaveLength(
-      helper.initialExpenses.length,
-    )
+    const expenses = await helper.expensesInDb()
+    expect(expenses).toHaveLength(helper.initialExpenses.length)
   })
 
   //Aqui tengo q hacer un test cuando pase la logica al backend para rechazar una expense q no cumpla con las condiciones requeridas.

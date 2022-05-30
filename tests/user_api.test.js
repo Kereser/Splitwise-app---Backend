@@ -98,6 +98,60 @@ describe('Adding users valid/nonValid', () => {
   })
 })
 
+describe('Updating a user', () => {
+  test('Updating preferences', async () => {})
+
+  test('Non valid action to update', async () => {
+    const users = await helper.usersInDb()
+    const userToUpdate = users[0]
+
+    const response = await api
+      .put(`/api/users/${userToUpdate.id}`)
+      .send({ userToUpdate, action: { type: 'NonValid', index: null } })
+
+    console.log(response.body)
+    expect(response.status).toBe(400)
+  })
+
+  test('Non valid id to update', async () => {
+    const users = await helper.usersInDb()
+    const userToUpdate = users[0]
+    const nonValiduserId = await helper.nonUserExistingId()
+
+    const response = await api
+      .put(`/api/users/${nonValiduserId}`)
+      .send({ userToUpdate, action: { type: 'NonValid', index: null } })
+
+    expect(response.status).toBe(404)
+  })
+
+  test('Updating with valid data with no prev-preferences', async () => {
+    const users = await helper.usersInDb()
+    const expenses = await helper.expensesInDb()
+    const expenseToAdd = expenses[0]
+    const userToUpdate = users[0]
+    const selected = 'Important'
+
+    console.log(userToUpdate)
+
+    const response = await api.put(`/api/users/${userToUpdate.id}`).send({
+      user: userToUpdate,
+      action: { type: 'Preferences', expense: expenseToAdd, selected },
+    })
+
+    console.log(response.body)
+    console.log(response.status)
+    const userPreferencesIds = response.body.preferences.map(
+      (p) => p.expense.id,
+    )
+    expect(userPreferencesIds).toContain(expenseToAdd.id)
+    const preferenceExpese = response.body.preferences.find(
+      (p) => p.expense.id === expenseToAdd.id,
+    )
+    expect(preferenceExpese.category).toBe('Important')
+  })
+})
+
 afterAll(() => {
   mongoose.connection.close()
 })

@@ -61,9 +61,22 @@ UserRouter.put('/:id', async (req, res) => {
 
   let updatedUser = {}
   if (action.type === 'AcceptAll') {
-    updatedUser = validator.acceptNotifications(user)
+    result = validator.acceptNotifications(user)
+    updatedUser = result.updatedUser
   } else if (action.type === 'AcceptOne') {
-    updatedUser = validator.acceptOneNotification(user, action.index)
+    result = validator.acceptOneNotification(user, action.index)
+    updatedUser = result.updatedUser
+  } else if (action.type === 'Preferences') {
+    result = validator.updatePreferences(user, action.expense, action.selected)
+    updatedUser = result.updatedUser
+  } else if (action.type === 'AddFriend') {
+    const response = await validator.addFriend(user, action.newFriend)
+    if (!response.status) {
+      return res.status(404).send({ message: response.message })
+    }
+    updatedUser = response.updatedUser
+  } else {
+    return res.status(400).send({ message: 'Invalid action.' })
   }
 
   const userUpdated = await User.findByIdAndUpdate(req.params.id, updatedUser, {

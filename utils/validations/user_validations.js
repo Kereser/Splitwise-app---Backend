@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const User = require('../../models/user')
 
 const lengthValidator = (username, password, name) => {
   if (username.length < 4) {
@@ -25,7 +26,7 @@ const acceptNotifications = (user) => {
     notifications: user.notifications,
     preferences: user.preferences,
   }
-  return updatedUser
+  return { updatedUser }
 }
 
 const acceptOneNotification = (user, index) => {
@@ -36,7 +37,97 @@ const acceptOneNotification = (user, index) => {
     notifications: user.notifications,
     preferences: user.preferences,
   }
-  return updatedUser
+  return { updatedUser }
 }
 
-module.exports = { lengthValidator, acceptNotifications, acceptOneNotification }
+const updatePreferences = (user, expense, selected) => {
+  const preferences = user.preferences
+  let updatedPreferences
+
+  if (preferences.length === 0) {
+    updatedPreferences = {
+      expense,
+      category: selected,
+    }
+    user.preferences = [updatedPreferences]
+    updatedUser = {
+      friends: user.friends.map((f) => mongoose.Types.ObjectId(f)),
+      expenses: user.expenses.map((e) => mongoose.Types.ObjectId(e)),
+      notifications: user.notifications,
+      preferences: user.preferences,
+    }
+    return { updatedUser }
+  } else if (
+    preferences.filter((p) => p.expense.id === expense.id).length === 0
+  ) {
+    updatedPreferences = {
+      expense,
+      category: selected,
+    }
+    user.preferences = [...user.preferences, updatedPreferences]
+    updatedUser = {
+      friends: user.friends.map((f) => mongoose.Types.ObjectId(f)),
+      expenses: user.expenses.map((e) => mongoose.Types.ObjectId(e)),
+      notifications: user.notifications,
+      preferences: user.preferences,
+    }
+    return { updatedUser }
+  } else {
+    const updatedPreferences = preferences.map((p) => {
+      if (p.expense.id === expense.id) {
+        return {
+          expense,
+          category: selected,
+        }
+      } else {
+        return p
+      }
+    })
+    user.preferences = updatedPreferences
+    updatedUser = {
+      friends: user.friends.map((f) => mongoose.Types.ObjectId(f)),
+      expenses: user.expenses.map((e) => mongoose.Types.ObjectId(e)),
+      notifications: user.notifications,
+      preferences: user.preferences,
+    }
+    return { updatedUser }
+  }
+}
+
+const addFriend = async (user, newFriend) => {
+  const totalUsers = await User.find({})
+  const totalUsernames = totalUsers.map((u) => u.username)
+
+  if (!totalUsernames.includes(newFriend)) {
+    return { message: "Username doesn't exist in database", status: false }
+  } else {
+    const friendToAdd = totalUsers.find((u) => u.username === newFriend)
+    const alreadyAddedFriend = user.friends.filter(
+      (f) => f.username === friendToAdd.username,
+    )
+    if (alreadyAddedFriend.length === 1) {
+      return {
+        message: 'You already add this user to friends list',
+        status: false,
+      }
+    } else {
+      user.friends = user.friends.map((f) => f.id)
+      user.friends = user.friends.concat(friendToAdd.id)
+      updatedUser = {
+        friends: user.friends.map((f) => mongoose.Types.ObjectId(f)),
+        expenses: user.expenses.map((e) => mongoose.Types.ObjectId(e)),
+        notifications: user.notifications,
+        preferences: user.preferences,
+      }
+      return { status: true, updatedUser }
+    }
+  }
+}
+
+module.exports = {
+  lengthValidator,
+  acceptNotifications,
+  acceptOneNotification,
+  updatePreferences,
+  addFriend,
+}
