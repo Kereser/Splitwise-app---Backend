@@ -15,6 +15,7 @@ beforeEach(async () => {
   // const promiseArray = userObjects.map((user) => user.save())
   // await Promise.all(promiseArray)
   await User.insertMany(helper.initialUsers)
+  await Expense.insertMany(helper.initialExpenses)
 })
 
 describe('retorned users', () => {
@@ -152,6 +153,8 @@ describe('Updating a user', () => {
   })
 })
 
-afterAll(() => {
+afterAll(async () => {
+  await User.deleteMany({})
+  await Expense.deleteMany({})
   mongoose.connection.close()
 })

@@ -4,13 +4,13 @@ const User = require('../../models/user')
 const lengthValidator = (username, password, name) => {
   if (username.length < 4) {
     return { message: 'Username must be at least 4 characters', status: false }
-  } else if (password.length < 4) {
-    return { message: 'Password must be at least 4 characters', status: false }
   } else if (name.length < 4) {
     return { message: 'Name must be at least 4 characters', status: false }
-  } else if (username.match(/\s/) || name.match(/\s/)) {
+  } else if (password.length < 4) {
+    return { message: 'Password must be at least 4 characters', status: false }
+  } else if (username.match(/\s/) || name.match(/\s/) || password.match(/\s/)) {
     return {
-      message: 'Neither username nor name can contain spaces',
+      message: 'Non of the fields can contain whitespaces',
       status: false,
     }
   } else {

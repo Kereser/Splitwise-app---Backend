@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-expenseSchema = new mongoose.Schema({
+const expenseSchema = new mongoose.Schema({
   description: String,
   balance: Number,
   paidBy: [],

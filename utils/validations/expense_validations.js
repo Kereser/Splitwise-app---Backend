@@ -128,14 +128,17 @@ const inputValidations = (paidBy, debtor, user, balance, description) => {
     return { message: 'You must set debtors list.', status: false }
   } else if (formattedDebtors.includes(user.username)) {
     return { message: 'You can not be in debtors list.', status: false }
+  } else if (description.length < 3) {
+    return {
+      message: 'You must set a description at least 3 characters long',
+      status: false,
+    }
+  } else if (balance <= 0) {
+    return { message: 'You balance must be grather than 0', status: false }
   } else if (!paidBy) {
     return { message: 'You must set payers list.', status: false }
   } else if (!formattedPaidBy.includes(user.username)) {
     return { message: 'You must be in payers list.', status: false }
-  } else if (balance <= 0) {
-    return { message: 'You can not set a balance of 0', status: false }
-  } else if (!description) {
-    return { message: 'You must set a description', status: false }
   } else {
     return { message: null, status: true }
   }

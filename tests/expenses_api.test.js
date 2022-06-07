@@ -221,6 +221,8 @@ describe('Trasnfer debt', () => {
   })
 })
 
-afterAll(() => {
+afterAll(async () => {
+  await User.deleteMany({})
+  await Expense.deleteMany({})
   mongoose.connection.close()
 })

@@ -7,8 +7,10 @@
     "start": "cross-env NODE_ENV=production node index.js",
     "dev": "cross-env NODE_ENV=development nodemon index.js",
     "test": "cross-env NODE_ENV=test jest --verbose --runInBand --forceExit",
+    "start:test": "cross-env NODE_ENV=test nodemon index.js",
     "deploy": "git push heroku main",
-    "build:ui": "rm -rf build && cd ../clientsplitwise && npm run build && cp -r build ../backsplitwise"
+    "build:ui": "rm -rf build && cd ../clientsplitwise && npm run build && cp -r build ../backsplitwise",
+    "cypress:open": "cypress open"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +28,7 @@
     "socket.io-client": "4.5.1"
   },
   "devDependencies": {
+    "cypress": "^10.0.3",
     "jest": "28.1.0",
     "nodemon": "2.0.16",
     "prettier": "2.6.2",

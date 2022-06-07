@@ -52,7 +52,8 @@ describe('my awesome project', () => {
     })
   })
 
-  afterAll(() => {
+  afterAll(async () => {
+    await User.deleteMany({})
     io.close()
     clientSocket.close()
   })
