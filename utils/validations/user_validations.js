@@ -124,10 +124,54 @@ const addFriend = async (user, newFriend) => {
   }
 }
 
+const filterExpense = (user, selected, expensesAtStart) => {
+  const filteredExpenses = user.preferences
+    .map((p) => {
+      return { ...p, expense: p.expense.id }
+    })
+    .filter((p) => {
+      return p.category === selected
+    })
+
+  console.log('user', user)
+  console.log('selected', selected)
+
+  if (selected === 'All') {
+    console.log('entro al all', expensesAtStart)
+    updatedUser = {
+      friends: user.friends.map((f) => mongoose.Types.ObjectId(f)),
+      expenses: expensesAtStart.map((e) => mongoose.Types.ObjectId(e.id)),
+      notifications: user.notifications,
+      preferences: user.preferences,
+    }
+    return { updatedUser }
+  } else if (filteredExpenses.length === 0) {
+    console.log('entro cuando no tengo expenses con esa preferencia')
+    updatedUser = {
+      friends: user.friends.map((f) => mongoose.Types.ObjectId(f)),
+      expenses: [],
+      notifications: user.notifications,
+      preferences: user.preferences,
+    }
+    return { updatedUser }
+  } else {
+    console.log('Entro cuando si tengo expense con esa preference')
+    console.log('filteredExpenses', filteredExpenses)
+    updatedUser = {
+      friends: user.friends.map((f) => mongoose.Types.ObjectId(f)),
+      expenses: filteredExpenses.map((e) => mongoose.Types.ObjectId(e.expense)),
+      notifications: user.notifications,
+      preferences: user.preferences,
+    }
+    return { updatedUser }
+  }
+}
+
 module.exports = {
   lengthValidator,
   acceptNotifications,
   acceptOneNotification,
   updatePreferences,
   addFriend,
+  filterExpense,
 }
