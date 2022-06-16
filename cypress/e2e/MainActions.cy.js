@@ -1,4 +1,4 @@
-describe('Visit main pages of the app', () => {
+describe('Doing main actions on the page', () => {
   before(() => {
     cy.request('POST', 'http://localhost:3001/api/testing/reset')
 
@@ -89,7 +89,7 @@ describe('Visit main pages of the app', () => {
   })
 
   describe('Acctions with dropdowns', () => {
-    it('Currency options are OK', () => {
+    it('Checking the options of the dropdown currency', () => {
       cy.get('#currency-ddwn-filter option')
         .first()
         .should('have.text', 'Select')
@@ -103,7 +103,7 @@ describe('Visit main pages of the app', () => {
         .should('have.text', 'ARS')
     })
 
-    it('Priority options are OK', () => {
+    it('Checking the options of the dropdown priority', () => {
       cy.get('#priority-ddwn-filter option')
         .first()
         .should('have.text', 'Select')
@@ -136,13 +136,52 @@ describe('Visit main pages of the app', () => {
       cy.get('[data-testid="ExpandMoreIcon"]').should('have.length', 1)
     })
 
-    it('Show no expenses if not preferences with that category', () => {
+    it('Show no expenses if no preferences with that category', () => {
       cy.get('#priority-ddwn-filter').select('Important')
       cy.contains('Add an expense to see it here!')
     })
 
     it('Show all expenses', () => {
       cy.get('#priority-ddwn-filter').select('All')
+      cy.get('[data-testid="ExpandMoreIcon"]').should('have.length', 2)
+    })
+  })
+
+  describe('Change the currency dropdown', () => {
+    it('Change the currency to EUR', () => {
+      cy.contains('You paid')
+        .first()
+        .next()
+        .invoke('text')
+        .then((text1) => {
+          const match1 = text1.match(/(?<=\$).+/)
+          const originalAmount = parseFloat(match1[0])
+
+          cy.get('#currency-ddwn-filter').select('EUR')
+          cy.wait(2000)
+
+          cy.contains('You paid')
+            .first()
+            .next()
+            .invoke('text')
+            .then((text2) => {
+              const match = text2.match(/(?<=\€).+/)
+              const changedAmount = parseFloat(match[0])
+
+              console.log(originalAmount, changedAmount)
+              const res = originalAmount > changedAmount
+              expect(res).to.be.true
+            })
+        })
+    })
+  })
+
+  describe('Filter expenses', () => {
+    it('Can filter and then retrieve to non filter', () => {
+      cy.get('#input-filter').type('ak')
+      cy.get('[data-testid="ExpandMoreIcon"]').should('have.length', 1)
+
+      cy.get('#input-filter').clear()
       cy.get('[data-testid="ExpandMoreIcon"]').should('have.length', 2)
     })
   })

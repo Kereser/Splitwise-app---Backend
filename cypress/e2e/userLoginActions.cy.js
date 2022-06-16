@@ -1,4 +1,4 @@
-describe('user acctions // Nombre para carpeta', () => {
+describe('user acctions', () => {
   before(() => {
     cy.request('POST', 'http://localhost:3001/api/testing/reset')
   })

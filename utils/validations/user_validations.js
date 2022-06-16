@@ -133,11 +133,7 @@ const filterExpense = (user, selected, expensesAtStart) => {
       return p.category === selected
     })
 
-  console.log('user', user)
-  console.log('selected', selected)
-
   if (selected === 'All') {
-    console.log('entro al all', expensesAtStart)
     updatedUser = {
       friends: user.friends.map((f) => mongoose.Types.ObjectId(f)),
       expenses: expensesAtStart.map((e) => mongoose.Types.ObjectId(e.id)),
