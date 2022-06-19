@@ -85,17 +85,3 @@ object-assign
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
-//! 1Escenario --> Paso la deuda a una persona q pago y puede haber mas gente endeudada conmigo.
-
-//! 2Escenario --> Paso la deuda a una persona q tambien debe y q obvio no pago.
-
-//! 3Escenario --> Paso la deuda a una persona q no esta en la deuda ni en pagadores. (Creo q no afecta q hayan mas personas.) --- Agregar a la nueva persona y quitarla a la q la tenia originlamente.
-
-//! Logica cuando no esta dentro de la gente que pago ni debe.
-
-//! Logica cuando paso al usuario q pago la cuenta
-
-//! Me falta hacer el filtro para no poder enviar un expense a usuarios q no estan registrados.
-
-//!Usar el usuario actualizado para setear estado
