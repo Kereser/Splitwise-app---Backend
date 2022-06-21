@@ -159,7 +159,6 @@ const finalExpense = async (
 
   for (let i = 0; i < formattedPaidBy.length; i++) {
     if (!usernames.includes(formattedPaidBy[i])) {
-      console.log('Fallo en payer: ', formattedPaidBy[i])
       return {
         message: `${formattedPaidBy[i]} is not in the db`,
         status: false,
@@ -169,7 +168,6 @@ const finalExpense = async (
 
   for (let i = 0; i < formattedDebtors.length; i++) {
     if (!usernames.includes(formattedDebtors[i])) {
-      console.log('Fallo en debtor: ', formattedDebtors[i])
       return {
         message: `${formattedDebtors[i]} is not in the db`,
         status: false,

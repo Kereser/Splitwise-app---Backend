@@ -110,7 +110,6 @@ describe('Updating a user', () => {
       .put(`/api/users/${userToUpdate.id}`)
       .send({ userToUpdate, action: { type: 'NonValid', index: null } })
 
-    console.log(response.body)
     expect(response.status).toBe(400)
   })
 
@@ -133,15 +132,11 @@ describe('Updating a user', () => {
     const userToUpdate = users[0]
     const selected = 'Important'
 
-    console.log(userToUpdate)
-
     const response = await api.put(`/api/users/${userToUpdate.id}`).send({
       user: userToUpdate,
       action: { type: 'Preferences', expense: expenseToAdd, selected },
     })
 
-    console.log(response.body)
-    console.log(response.status)
     const userPreferencesIds = response.body.preferences.map(
       (p) => p.expense.id,
     )

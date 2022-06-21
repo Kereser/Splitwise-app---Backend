@@ -69,13 +69,6 @@ UserRouter.put('/:id', async (req, res) => {
   } else if (action.type === 'Preferences') {
     result = validator.updatePreferences(user, action.expense, action.selected)
     updatedUser = result.updatedUser
-  } else if (action.type === 'filterExpense') {
-    result = validator.filterExpense(
-      user,
-      action.selected,
-      action.expensesAtStart,
-    )
-    updatedUser = result.updatedUser
   } else if (action.type === 'AddFriend') {
     const response = await validator.addFriend(user, action.newFriend)
     if (!response.status) {

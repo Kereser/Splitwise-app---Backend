@@ -37,7 +37,6 @@ describe('my awesome project', () => {
 
     clientSocket.emit('newNotification', { senderUser, recieverUser })
     serverSocket.on('newNotification', (arg) => {
-      console.log('Args: ', arg)
       expect(arg.recieverUser).toContain('test2')
     })
   })

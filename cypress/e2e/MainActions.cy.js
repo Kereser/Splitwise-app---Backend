@@ -168,7 +168,6 @@ describe('Doing main actions on the page', () => {
               const match = text2.match(/(?<=\€).+/)
               const changedAmount = parseFloat(match[0])
 
-              console.log(originalAmount, changedAmount)
               const res = originalAmount > changedAmount
               expect(res).to.be.true
             })
